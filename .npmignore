@@ -1,0 +1,33 @@
+# Source files (dist is published instead)
+src/__tests__/
+
+# Development files
+.github/
+.vscode/
+.idea/
+
+# Test files
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+jest.config.js
+jest.setup.js
+coverage/
+
+# Config files
+.eslintrc*
+.prettierrc*
+tsconfig.json
+
+# Documentation (README is included)
+CONTRIBUTING.md
+docs/
+
+# Git
+.git/
+.gitignore
+
+# Misc
+.DS_Store
+*.log
