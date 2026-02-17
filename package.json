@@ -1,5 +1,5 @@
 {
-  "name": "react-native-lighthouse",
+  "name": "@indeed/react-native-lighthouse",
   "version": "1.0.0",
   "description": "Core Web Vitals performance measurement for React Native - measure TTFF, TTI, FID and calculate Lighthouse-style performance scores",
   "main": "dist/index.js",
@@ -34,16 +34,19 @@
     "metrics",
     "monitoring"
   ],
-  "author": "",
+  "author": "Indeed Engineering",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
-    "url": "https://code.corp.indeed.com/bcripps/react-native-lighthouse"
+    "url": "https://github.com/indeedeng/react-native-lighthouse"
   },
   "bugs": {
-    "url": "https://code.corp.indeed.com/bcripps/react-native-lighthouse/-/issues"
+    "url": "https://github.com/indeedeng/react-native-lighthouse/issues"
   },
-  "homepage": "https://code.corp.indeed.com/bcripps/react-native-lighthouse#readme",
+  "homepage": "https://github.com/indeedeng/react-native-lighthouse#readme",
   "peerDependencies": {
     "react": ">=17.0.0",
     "react-native": ">=0.64.0"

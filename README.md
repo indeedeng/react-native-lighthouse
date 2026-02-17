@@ -1,14 +1,6 @@
 # react-native-lighthouse 🏠
 
-[![npm version](https://img.shields.io/npm/v/react-native-lighthouse.svg)](https://www.npmjs.com/package/react-native-lighthouse)
-[![license](https://img.shields.io/npm/l/react-native-lighthouse.svg)](https://code.corp.indeed.com/bcripps/react-native-lighthouse/-/blob/main/LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
-
 **Core Web Vitals performance measurement for React Native.** Get Lighthouse-style performance scores for your mobile app components.
-
-<p align="center">
-  <img src="docs/performance-output.png" alt="Performance metrics output" width="600" />
-</p>
 
 ## ✨ Features
 
@@ -22,17 +14,17 @@
 ## 📦 Installation
 
 ```bash
-npm install react-native-lighthouse
+npm install @indeed/react-native-lighthouse
 # or
-yarn add react-native-lighthouse
+yarn add @indeed/react-native-lighthouse
 # or
-pnpm add react-native-lighthouse
+pnpm add @indeed/react-native-lighthouse
 ```
 
 ## 🚀 Quick Start
 
 ```tsx
-import { usePerformanceMeasurement } from 'react-native-lighthouse';
+import { usePerformanceMeasurement } from '@indeed/react-native-lighthouse';
 
 function ProductScreen({ productId }) {
   const { markInteractive, panResponder, score } = usePerformanceMeasurement({
@@ -89,7 +81,7 @@ Measured automatically when users first touch the screen. Uses PanResponder to c
 
 ## 🎯 Performance Thresholds
 
-These thresholds are **~40% stricter than web Core Web Vitals** because native apps should be faster (bundled code, no network latency for initial render).
+These are **aspirational thresholds** designed for high-performance native apps. They are stricter than official platform guidelines and based on human perception research.
 
 | Metric | Good | Needs Improvement | Poor |
 |--------|------|-------------------|------|
@@ -97,13 +89,51 @@ These thresholds are **~40% stricter than web Core Web Vitals** because native a
 | TTI | < 500ms | 500-1500ms | > 1500ms |
 | FID | < 50ms | 50-150ms | > 150ms |
 
-### Why Stricter?
+### Threshold Rationale
 
-Native apps have advantages over web:
-- ✅ Code is pre-bundled in the app
-- ✅ No network requests for initial render
-- ✅ No HTML/CSS/JS parsing overhead
-- ✅ Users expect native app speed
+#### TTFF (< 300ms good)
+Based on [Jakob Nielsen's response time research](https://www.nngroup.com/articles/response-times-3-important-limits/), **100ms feels instantaneous** to users. Our 300ms "good" threshold provides buffer while staying well under the 1-second limit where users lose their flow of thought. There is no official native mobile standard for component-level render times.
+
+#### TTI (< 500ms good)  
+Derived from Google's app startup guidelines. [Google Play considers cold starts > 5 seconds as "bad behavior"](https://support.google.com/googleplay/android-developer/answer/9844486), with industry best practice targeting < 2 seconds. For individual components (assuming ~4 major components per screen), 500ms keeps total screen TTI under 2 seconds.
+
+#### FID (< 50ms good)
+Well-supported by academic research. Studies show users can [perceive touch latency as low as 5-10ms](https://dl.acm.org/doi/10.1145/2556288.2557037) during drag operations, and commercial devices currently have 50-200ms latency. Our 50ms threshold aligns with the upper bound of imperceptible delay.
+
+### Comparison to Official Standards
+
+| Source | Metric | Threshold |
+|--------|--------|-----------|
+| **Google Play (Android Vitals)** | Cold start "bad" | > 5 seconds |
+| **Google Play** | Warm start "bad" | > 2 seconds |
+| **Google Play** | Frozen frame | > 700ms |
+| **Web Core Web Vitals** | LCP good | < 2,500ms |
+| **Web Core Web Vitals** | INP good | < 200ms |
+| **Jakob Nielsen** | "Instantaneous" | < 100ms |
+| **Jakob Nielsen** | "Flow maintained" | < 1,000ms |
+
+Our thresholds are intentionally stricter because:
+- ✅ Native apps have pre-bundled code (no network fetch for JS/HTML)
+- ✅ No parsing overhead (unlike web browsers)
+- ✅ Users expect native apps to feel faster than web
+- ✅ Component-level measurement (not full app startup)
+
+### Custom Thresholds
+
+If the default thresholds don't fit your use case, you can provide your own:
+
+```ts
+import { calculatePerformanceScore } from '@indeed/react-native-lighthouse';
+
+// More lenient thresholds aligned with Google's app startup guidelines
+const relaxedThresholds = {
+  ttff: { good: 1000, poor: 3000 },
+  tti: { good: 2000, poor: 5000 },
+  fid: { good: 100, poor: 300 },
+};
+
+const score = calculatePerformanceScore(metrics, relaxedThresholds);
+```
 
 ## 📈 Scoring System
 
@@ -156,7 +186,7 @@ Main hook for measuring component performance.
 Calculate a performance score from metrics.
 
 ```ts
-import { calculatePerformanceScore } from 'react-native-lighthouse';
+import { calculatePerformanceScore } from '@indeed/react-native-lighthouse';
 
 const score = calculatePerformanceScore({
   timeToFirstFrameMs: 250,
@@ -169,21 +199,6 @@ console.log(score);
 // { overall: 95, breakdown: { ttff: 100, tti: 100, fid: 100 }, category: 'excellent' }
 ```
 
-### Custom Thresholds
-
-You can provide custom thresholds for different use cases:
-
-```ts
-import { calculatePerformanceScore, type PerformanceThresholds } from 'react-native-lighthouse';
-
-const strictThresholds: PerformanceThresholds = {
-  ttff: { good: 200, poor: 500 },
-  tti: { good: 300, poor: 1000 },
-  fid: { good: 30, poor: 100 },
-};
-
-const score = calculatePerformanceScore(metrics, strictThresholds);
-```
 
 ## 🧩 Examples
 
@@ -330,7 +345,7 @@ import type {
   UsePerformanceMeasurementOptions,
   PerformanceThresholds,
   MetricWeights,
-} from 'react-native-lighthouse';
+} from '@indeed/react-native-lighthouse';
 ```
 
 ## 🤝 Contributing
