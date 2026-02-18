@@ -2,6 +2,19 @@
 
 **Core Web Vitals performance measurement for React Native.** Get Lighthouse-style performance scores for your mobile app components.
 
+## 🤔 The Challenge
+
+Indeed had traditionally been a web company. Site speed wasn't just a nice-to-have — it was fundamental to how we built systems. We believed good software was always fast, and for many years now, we had relied on Lighthouse to keep us honest. 
+
+In the past we’ve written in depth on this topic, but as we’ve transitioned to a Mobile App first company, we needed a way of bringing the same performance rigor to our native code. 
+
+As React Native proliferated across our most critical pages— ViewJob, SERP, Homepage — we found ourselves flying blind. We had no standardized way to measure whether our mobile performance was improving, degrading, or holding steady. We needed answers to fundamental questions: How fast did our screens load? When could users actually interact with them? Were we maintaining the performance standards that Indeed was known for?
+
+## 💡 The Solution: Core Web Vitals for React Native
+
+Rather than reinvent the wheel, we looked to the industry standards that had proven effective on the web: Core Web Vitals. These metrics — designed by Google to capture the essence of user experience — translated remarkably well to mobile apps. We just needed to adapt them for React Native's unique threading model and lifecycle.
+
+
 ## ✨ Features
 
 - 📊 **Three Core Metrics** — TTFF, TTI, and FID (mapped from web Core Web Vitals)
