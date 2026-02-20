@@ -53,6 +53,7 @@
     "react-native": ">=0.64.0"
   },
   "devDependencies": {
+    "@react-native/babel-preset": "^0.73.0",
     "@testing-library/react-native": "^12.4.3",
     "@types/jest": "^29.5.11",
     "@types/react": "^18.2.45",
