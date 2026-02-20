@@ -27,17 +27,17 @@ Rather than reinvent the wheel, we looked to the industry standards that had pro
 ## 📦 Installation
 
 ```bash
-npm install @indeed/react-native-lighthouse
+npm install react-native-lighthouse
 # or
-yarn add @indeed/react-native-lighthouse
+yarn add react-native-lighthouse
 # or
-pnpm add @indeed/react-native-lighthouse
+pnpm add react-native-lighthouse
 ```
 
 ## 🚀 Quick Start
 
 ```tsx
-import { usePerformanceMeasurement } from '@indeed/react-native-lighthouse';
+import { usePerformanceMeasurement } from 'react-native-lighthouse';
 
 function ProductScreen({ productId }) {
   const { markInteractive, panResponder, score } = usePerformanceMeasurement({
@@ -136,7 +136,7 @@ Our thresholds are intentionally stricter because:
 If the default thresholds don't fit your use case, you can provide your own:
 
 ```ts
-import { calculatePerformanceScore } from '@indeed/react-native-lighthouse';
+import { calculatePerformanceScore } from 'react-native-lighthouse';
 
 // More lenient thresholds aligned with Google's app startup guidelines
 const relaxedThresholds = {
@@ -199,7 +199,7 @@ Main hook for measuring component performance.
 Calculate a performance score from metrics.
 
 ```ts
-import { calculatePerformanceScore } from '@indeed/react-native-lighthouse';
+import { calculatePerformanceScore } from 'react-native-lighthouse';
 
 const score = calculatePerformanceScore({
   timeToFirstFrameMs: 250,
@@ -358,7 +358,7 @@ import type {
   UsePerformanceMeasurementOptions,
   PerformanceThresholds,
   MetricWeights,
-} from '@indeed/react-native-lighthouse';
+} from 'react-native-lighthouse';
 ```
 
 ## 🤝 Contributing
