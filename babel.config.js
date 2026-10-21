@@ -1,5 +1,9 @@
-// Jest transforms both our TypeScript and RN's Flow-typed node_modules.
-// @react-native/babel-preset handles TS, JSX, and Flow (so @react-native/js-polyfills parses).
+// Jest compiles this package only. React Native itself is mocked, so the
+// suite does not parse Flow sources under react-native/Libraries.
 module.exports = {
-  presets: ['module:@react-native/babel-preset'],
+  presets: [
+    ['@babel/preset-env', { targets: { node: 'current' } }],
+    ['@babel/preset-react', { runtime: 'classic' }],
+    '@babel/preset-typescript',
+  ],
 };

@@ -1,11 +1,12 @@
 module.exports = {
-  preset: 'react-native',
+  testEnvironment: 'node',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   testMatch: ['**/__tests__/**/*.(ts|tsx|js)', '**/*.(test|spec).(ts|tsx|js)'],
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
-  transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native)/)',
-  ],
+  transform: {
+    '\\.[jt]sx?$': 'babel-jest',
+  },
+  transformIgnorePatterns: ['/node_modules/'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',

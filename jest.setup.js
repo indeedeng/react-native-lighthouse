@@ -1,68 +1,65 @@
-// Jest setup file for react-native-lighthouse
-
-// Stub native modules so React Native can load in Node (no native binary).
-// Turbo modules must expose getConstants(); DeviceInfo/Dimensions expect window/screen metrics.
-const stubNativeModule = () => ({
-  getConstants: jest.fn(() => ({
-    Dimensions: {
-      window: { width: 375, height: 812, scale: 2, fontScale: 1 },
-      screen: { width: 375, height: 812, scale: 2, fontScale: 1 },
-    },
-  })),
-});
-jest.mock('react-native/Libraries/TurboModule/TurboModuleRegistry', () => ({
-  getEnforcing: jest.fn(stubNativeModule),
-  get: jest.fn(() => null),
-}));
-
-// NativeEventEmitter requires a non-null native module on iOS; stub it for Node.
-jest.mock('react-native/Libraries/EventEmitter/NativeEventEmitter', () => {
-  return class NativeEventEmitter {
-    constructor() {}
-    addListener() {
-      return { remove: jest.fn() };
-    }
-    removeAllListeners() {}
-  };
-});
-
-// Mock react-native: use a Proxy so deprecated PropTypes are never read from RN (their getters log).
-// We serve those from deprecated-react-native-prop-types and PanResponder from our mock.
+// The suite only needs the public react-native entry. Loading the real package
+// follows react-native/Libraries paths that move between releases, and React
+// Native 0.88 throws when its removed InteractionManager export is read.
 jest.mock('react-native', () => {
-  const RN = jest.requireActual('react-native');
-  const DeprecatedPropTypes = require('deprecated-react-native-prop-types');
-  const panResponderMock = {
-    create: jest.fn((config) => ({
-      panHandlers: {
-        onStartShouldSetResponder: config.onStartShouldSetPanResponder,
-        onMoveShouldSetResponder: config.onMoveShouldSetPanResponder,
+  const React = require('react');
+  const hostComponents = new Map();
+
+  function createHostComponent(name) {
+    function Host(props) {
+      return React.createElement(name, props, props.children);
+    }
+    Host.displayName = name;
+    return Host;
+  }
+
+  return new Proxy(
+    {
+      PanResponder: {
+        create: jest.fn((config) => ({
+          panHandlers: {
+            onStartShouldSetResponder: config.onStartShouldSetPanResponder,
+            onMoveShouldSetResponder: config.onMoveShouldSetPanResponder,
+          },
+        })),
       },
-    })),
-  };
-  const overrides = {
-    ColorPropType: DeprecatedPropTypes.ColorPropType,
-    EdgeInsetsPropType: DeprecatedPropTypes.EdgeInsetsPropType,
-    PointPropType: DeprecatedPropTypes.PointPropType,
-    ViewPropTypes: DeprecatedPropTypes.ViewPropTypes,
-    PanResponder: panResponderMock,
-  };
-  return new Proxy(RN, {
-    get(target, prop) {
-      if (Object.prototype.hasOwnProperty.call(overrides, prop)) {
-        return overrides[prop];
-      }
-      return target[prop];
     },
-  });
+    {
+      get(target, prop) {
+        if (prop === '__esModule') {
+          return true;
+        }
+        if (Object.prototype.hasOwnProperty.call(target, prop)) {
+          return target[prop];
+        }
+        if (typeof prop !== 'string') {
+          return undefined;
+        }
+        if (!hostComponents.has(prop)) {
+          hostComponents.set(prop, createHostComponent(prop));
+        }
+        return hostComponents.get(prop);
+      },
+    }
+  );
 });
 
-// Silence console logs during tests unless debugging
+// Silence console logs during tests unless debugging.
+// React 19 prints this from react-test-renderer, which the testing library still uses.
+const reactTestRendererDeprecation = 'react-test-renderer is deprecated';
 if (process.env.DEBUG !== 'true') {
+  const originalError = console.error;
   global.console = {
     ...console,
     log: jest.fn(),
     debug: jest.fn(),
     info: jest.fn(),
     warn: jest.fn(),
+    error: (...args) => {
+      if (typeof args[0] === 'string' && args[0].includes(reactTestRendererDeprecation)) {
+        return;
+      }
+      originalError(...args);
+    },
   };
 }
