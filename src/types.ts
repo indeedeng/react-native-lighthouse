@@ -143,6 +143,12 @@ export interface UsePerformanceMeasurementOptions {
   debug?: boolean;
 
   /**
+   * When false, all measurement and reporting is skipped entirely.
+   * @default true
+   */
+  enabled?: boolean;
+
+  /**
    * Custom callback when performance metrics are available
    */
   onMetricsReady?: (metrics: PerformanceMetrics) => void;

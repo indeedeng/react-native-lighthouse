@@ -63,6 +63,7 @@ export function usePerformanceMeasurement(
     namespace,
     fidTimeout = 5000,
     debug = isDev,
+    enabled = true,
     onMetricsReady,
     onInteractive,
     onReport,
@@ -140,45 +141,48 @@ export function usePerformanceMeasurement(
   // Helper function to measure FID for different input types
   const measureFirstInputDelay = useCallback(
     (inputType: 'touch' | 'scroll') => {
-      if (!hasRecordedFirstInputRef.current) {
-        const inputTime = Date.now();
-        hasRecordedFirstInputRef.current = true;
-
-        // Measure FID: delay from input event to when processing starts
-        queueMicrotask(() => {
-          const processingStartTime = Date.now();
-
-          const fidMetrics: FirstInputDelayMetrics = {
-            firstInputDelayMs: processingStartTime - inputTime,
-            firstInputTimeMs: inputTime,
-            inputProcessingStartTimeMs: processingStartTime,
-            inputType,
-          };
-
-          firstInputDelayRef.current = fidMetrics;
-
-          // Update metrics with FID data
-          if (metricsRef.current) {
-            const updatedMetrics: PerformanceMetrics = {
-              ...metricsRef.current,
-              firstInputDelay: fidMetrics,
-            };
-            metricsRef.current = updatedMetrics;
-            setMetrics(updatedMetrics);
-
-            const updatedScore = calculatePerformanceScore(updatedMetrics);
-            setScore(updatedScore);
-
-            onMetricsReady?.(updatedMetrics);
-          }
-
-          // Log final metrics now that FID is captured
-          logFinalMetrics();
-        });
+      if (!enabled || hasRecordedFirstInputRef.current) {
+        return false;
       }
+
+      const inputTime = Date.now();
+      hasRecordedFirstInputRef.current = true;
+
+      // Measure FID: delay from input event to when processing starts
+      queueMicrotask(() => {
+        const processingStartTime = Date.now();
+
+        const fidMetrics: FirstInputDelayMetrics = {
+          firstInputDelayMs: processingStartTime - inputTime,
+          firstInputTimeMs: inputTime,
+          inputProcessingStartTimeMs: processingStartTime,
+          inputType,
+        };
+
+        firstInputDelayRef.current = fidMetrics;
+
+        // Update metrics with FID data
+        if (metricsRef.current) {
+          const updatedMetrics: PerformanceMetrics = {
+            ...metricsRef.current,
+            firstInputDelay: fidMetrics,
+          };
+          metricsRef.current = updatedMetrics;
+          setMetrics(updatedMetrics);
+
+          const updatedScore = calculatePerformanceScore(updatedMetrics);
+          setScore(updatedScore);
+
+          onMetricsReady?.(updatedMetrics);
+        }
+
+        // Log final metrics now that FID is captured
+        logFinalMetrics();
+      });
+
       return false; // Don't actually handle the gesture, just measure it
     },
-    [logFinalMetrics, onMetricsReady]
+    [enabled, logFinalMetrics, onMetricsReady]
   );
 
   // Create PanResponder for FID measurement
@@ -191,6 +195,8 @@ export function usePerformanceMeasurement(
 
   // Capture first frame time after component mounts
   useEffect(() => {
+    if (!enabled) return;
+
     // Capture first frame timestamp immediately - closer to actual first frame
     if (firstFrameTimeMsRef.current === null) {
       firstFrameTimeMsRef.current = Date.now();
@@ -216,11 +222,10 @@ export function usePerformanceMeasurement(
 
       onMetricsReady?.(initialMetrics);
     });
-  }, [debug, logPrefix, onMetricsReady]);
+  }, [debug, enabled, logPrefix, onMetricsReady]);
 
   const markInteractive = useCallback(() => {
-    if (interactiveTimeMsRef.current !== null) {
-      // Already marked as interactive
+    if (!enabled || interactiveTimeMsRef.current !== null) {
       return;
     }
 
@@ -259,7 +264,7 @@ export function usePerformanceMeasurement(
         logFinalMetrics();
       }, fidTimeout);
     }
-  }, [debug, fidTimeout, logPrefix, onInteractive, logFinalMetrics]);
+  }, [debug, enabled, fidTimeout, logPrefix, onInteractive, logFinalMetrics]);
 
   // Cleanup timeout on unmount
   useEffect(() => {

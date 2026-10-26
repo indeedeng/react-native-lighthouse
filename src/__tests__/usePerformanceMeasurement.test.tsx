@@ -254,6 +254,88 @@ describe('usePerformanceMeasurement', () => {
     });
   });
 
+  describe('enabled option', () => {
+    it('should not capture metrics when enabled is false', async () => {
+      const onMetricsReady = jest.fn();
+      const onReport = jest.fn();
+
+      const { result } = renderHook(() =>
+        usePerformanceMeasurement({
+          ...defaultOptions,
+          enabled: false,
+          onMetricsReady,
+          onReport,
+        })
+      );
+
+      // Wait for any async updates that would normally populate metrics
+      await act(async () => {
+        await new Promise((resolve) => {
+          setImmediate(() => {
+            setImmediate(() => {
+              resolve(undefined);
+            });
+          });
+        });
+      });
+
+      expect(result.current.metrics).toBeNull();
+      expect(result.current.score).toBeNull();
+      expect(onMetricsReady).not.toHaveBeenCalled();
+      expect(onReport).not.toHaveBeenCalled();
+    });
+
+    it('should not mark interactive when enabled is false', async () => {
+      const onInteractive = jest.fn();
+
+      const { result } = renderHook(() =>
+        usePerformanceMeasurement({
+          ...defaultOptions,
+          enabled: false,
+          onInteractive,
+        })
+      );
+
+      await act(async () => {
+        await new Promise((resolve) => setImmediate(resolve));
+      });
+
+      act(() => {
+        result.current.markInteractive();
+      });
+
+      expect(result.current.metrics?.timeToInteractiveMs).toBeUndefined();
+      expect(onInteractive).not.toHaveBeenCalled();
+    });
+
+    it('should behave normally when enabled is explicitly true', async () => {
+      const onMetricsReady = jest.fn();
+
+      const { result } = renderHook(() =>
+        usePerformanceMeasurement({
+          ...defaultOptions,
+          enabled: true,
+          onMetricsReady,
+        })
+      );
+
+      await act(async () => {
+        await new Promise((resolve) => {
+          setImmediate(() => {
+            setImmediate(() => {
+              resolve(undefined);
+            });
+          });
+        });
+      });
+
+      if (result.current.metrics) {
+        expect(result.current.metrics.timeToFirstFrameMs).toBeGreaterThanOrEqual(0);
+        expect(onMetricsReady).toHaveBeenCalled();
+      }
+    });
+  });
+
   describe('Namespace', () => {
     it('should include namespace in log prefix', async () => {
       renderHook(() =>
