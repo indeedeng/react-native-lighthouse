@@ -1,6 +1,6 @@
 {
   "name": "react-native-lighthouse",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Core Web Vitals performance measurement for React Native - measure TTFF, TTI, FID and calculate Lighthouse-style performance scores",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

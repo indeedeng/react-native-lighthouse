@@ -181,6 +181,7 @@ Main hook for measuring component performance.
 | `namespace` | `string` | `undefined` | Group prefix (e.g., 'checkout', 'profile') |
 | `fidTimeout` | `number` | `5000` | Ms to wait for FID before logging |
 | `debug` | `boolean` | `__DEV__` | Enable console logging |
+| `enabled` | `boolean` | `true` | Set false to skip measurement and reporting |
 | `onMetricsReady` | `function` | `undefined` | Called when metrics update |
 | `onInteractive` | `function` | `undefined` | Called when markInteractive() is called |
 | `onReport` | `function` | `undefined` | Called with final metrics and score |
