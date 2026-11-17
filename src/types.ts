@@ -100,7 +100,11 @@ export interface PerformanceHookResult {
   markInteractive: () => void;
 
   /**
-   * Current performance metrics (null until first frame is captured)
+   * Current performance metrics (null until first frame is captured).
+   *
+   * Reading `metrics` or `score` subscribes the component to updates: the hook
+   * re-renders it whenever the metrics change. A component that never reads
+   * either value is not re-rendered by the hook.
    */
   metrics: PerformanceMetrics | null;
 
@@ -111,7 +115,9 @@ export interface PerformanceHookResult {
   panResponder: ReturnType<typeof PanResponder.create>;
 
   /**
-   * Lighthouse-style performance score (null until metrics are available)
+   * Lighthouse-style performance score (null until metrics are available).
+   *
+   * Like `metrics`, reading `score` subscribes the component to updates.
    */
   score: PerformanceScore | null;
 }

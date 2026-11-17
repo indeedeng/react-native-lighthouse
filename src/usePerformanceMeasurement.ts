@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, useState } from 'react';
+import { useRef, useEffect, useCallback, useReducer } from 'react';
 import { PanResponder } from 'react-native';
 import type {
   PerformanceMetrics,
@@ -74,11 +74,24 @@ export function usePerformanceMeasurement(
   const firstFrameTimeMsRef = useRef<number | null>(null);
   const interactiveTimeMsRef = useRef<number | null>(null);
   const metricsRef = useRef<PerformanceMetrics | null>(null);
+  const scoreRef = useRef<PerformanceScore | null>(null);
   const hasLoggedRef = useRef<boolean>(false);
 
-  // State to trigger re-renders when metrics change
-  const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
-  const [score, setScore] = useState<PerformanceScore | null>(null);
+  // Re-render the host component when metrics change, but only once it has read
+  // `metrics` or `score` (see the getters in the return value). Components that
+  // only use markInteractive, panResponder and the callbacks are never re-rendered.
+  const hasReadResultRef = useRef<boolean>(false);
+  const [, rerender] = useReducer((count: number) => count + 1, 0);
+
+  const updateMetrics = useCallback((nextMetrics: PerformanceMetrics): PerformanceScore => {
+    const nextScore = calculatePerformanceScore(nextMetrics);
+    metricsRef.current = nextMetrics;
+    scoreRef.current = nextScore;
+    if (hasReadResultRef.current) {
+      rerender();
+    }
+    return nextScore;
+  }, []);
 
   // FID tracking refs
   const firstInputDelayRef = useRef<FirstInputDelayMetrics | null>(null);
@@ -116,11 +129,7 @@ export function usePerformanceMeasurement(
       firstInputDelay: firstInputDelayRef.current || metricsRef.current.firstInputDelay,
     };
 
-    metricsRef.current = finalMetrics;
-    setMetrics(finalMetrics);
-
-    const finalScore = calculatePerformanceScore(finalMetrics);
-    setScore(finalScore);
+    const finalScore = updateMetrics(finalMetrics);
 
     // Debug logging
     if (debug) {
@@ -136,7 +145,7 @@ export function usePerformanceMeasurement(
 
     // Call the onReport callback for analytics
     onReport?.(finalMetrics, finalScore);
-  }, [debug, logPrefix, onReport]);
+  }, [debug, logPrefix, onReport, updateMetrics]);
 
   // Helper function to measure FID for different input types
   const measureFirstInputDelay = useCallback(
@@ -167,11 +176,7 @@ export function usePerformanceMeasurement(
             ...metricsRef.current,
             firstInputDelay: fidMetrics,
           };
-          metricsRef.current = updatedMetrics;
-          setMetrics(updatedMetrics);
-
-          const updatedScore = calculatePerformanceScore(updatedMetrics);
-          setScore(updatedScore);
+          updateMetrics(updatedMetrics);
 
           onMetricsReady?.(updatedMetrics);
         }
@@ -182,7 +187,7 @@ export function usePerformanceMeasurement(
 
       return false; // Don't actually handle the gesture, just measure it
     },
-    [enabled, logFinalMetrics, onMetricsReady]
+    [enabled, logFinalMetrics, onMetricsReady, updateMetrics]
   );
 
   // Create PanResponder for FID measurement
@@ -210,11 +215,7 @@ export function usePerformanceMeasurement(
         firstFrameTimeMs: firstFrameTimeMsRef.current!,
       };
 
-      metricsRef.current = initialMetrics;
-      setMetrics(initialMetrics);
-
-      const initialScore = calculatePerformanceScore(initialMetrics);
-      setScore(initialScore);
+      updateMetrics(initialMetrics);
 
       if (debug) {
         console.log(`[Lighthouse] ${logPrefix} TTFF: ${initialMetrics.timeToFirstFrameMs}ms`);
@@ -222,7 +223,7 @@ export function usePerformanceMeasurement(
 
       onMetricsReady?.(initialMetrics);
     });
-  }, [debug, enabled, logPrefix, onMetricsReady]);
+  }, [debug, enabled, logPrefix, onMetricsReady, updateMetrics]);
 
   const markInteractive = useCallback(() => {
     if (!enabled || interactiveTimeMsRef.current !== null) {
@@ -243,11 +244,7 @@ export function usePerformanceMeasurement(
       firstInputDelay: firstInputDelayRef.current || metricsRef.current?.firstInputDelay,
     };
 
-    metricsRef.current = updatedMetrics;
-    setMetrics(updatedMetrics);
-
-    const updatedScore = calculatePerformanceScore(updatedMetrics);
-    setScore(updatedScore);
+    updateMetrics(updatedMetrics);
 
     if (debug) {
       console.log(`[Lighthouse] ${logPrefix} TTI: ${updatedMetrics.timeToInteractiveMs}ms`);
@@ -264,7 +261,7 @@ export function usePerformanceMeasurement(
         logFinalMetrics();
       }, fidTimeout);
     }
-  }, [debug, enabled, fidTimeout, logPrefix, onInteractive, logFinalMetrics]);
+  }, [debug, enabled, fidTimeout, logPrefix, onInteractive, logFinalMetrics, updateMetrics]);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -275,10 +272,18 @@ export function usePerformanceMeasurement(
     };
   }, []);
 
+  // Getters, so that reading `metrics` or `score` is what subscribes the host
+  // component to updates. Each read returns the latest value.
   return {
     markInteractive,
-    metrics,
+    get metrics() {
+      hasReadResultRef.current = true;
+      return metricsRef.current;
+    },
     panResponder,
-    score,
+    get score() {
+      hasReadResultRef.current = true;
+      return scoreRef.current;
+    },
   };
 }
