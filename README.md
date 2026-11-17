@@ -40,7 +40,7 @@ pnpm add react-native-lighthouse
 import { usePerformanceMeasurement } from 'react-native-lighthouse';
 
 function ProductScreen({ productId }) {
-  const { markInteractive, panResponder, score } = usePerformanceMeasurement({
+  const { markInteractive, panResponder } = usePerformanceMeasurement({
     componentName: 'ProductScreen',
     onReport: (metrics, score) => {
       // Send to your analytics
@@ -195,6 +195,8 @@ Main hook for measuring component performance.
 | `panResponder` | `PanResponder` | Attach to root View for FID measurement |
 | `score` | `PerformanceScore \| null` | Current Lighthouse-style score |
 
+The hook re-renders your component when the metrics change only if the component reads `metrics` or `score`. If you only send the values to analytics through `onReport`, leave them unread. Measuring then never re-renders the screen it measures.
+
 ### `calculatePerformanceScore(metrics, thresholds?, weights?)`
 
 Calculate a performance score from metrics.
@@ -245,7 +247,7 @@ function HomeScreen() {
 
 ```tsx
 function CheckoutScreen() {
-  const { markInteractive, panResponder, score } = usePerformanceMeasurement({
+  const { markInteractive, panResponder } = usePerformanceMeasurement({
     componentName: 'CheckoutScreen',
     namespace: 'checkout',
     onReport: (metrics, score) => {

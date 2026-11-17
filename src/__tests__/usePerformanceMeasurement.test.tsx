@@ -231,6 +231,78 @@ describe('usePerformanceMeasurement', () => {
     });
   });
 
+  describe('Re-rendering', () => {
+    it('should not re-render the component when metrics and score are never read', async () => {
+      jest.useFakeTimers();
+      const onReport = jest.fn();
+      let renderCount = 0;
+
+      const { result } = renderHook(() => {
+        renderCount += 1;
+        const { markInteractive, panResponder } = usePerformanceMeasurement({
+          ...defaultOptions,
+          fidTimeout: 1000,
+          onReport,
+        });
+        return { markInteractive, panResponder };
+      });
+
+      // Wait for TTFF
+      await act(async () => {
+        jest.runAllTicks();
+      });
+
+      act(() => {
+        result.current.markInteractive();
+      });
+
+      // Fast-forward past FID timeout so the final report is logged
+      act(() => {
+        jest.advanceTimersByTime(1100);
+      });
+
+      expect(onReport).toHaveBeenCalledTimes(1);
+      expect(renderCount).toBe(1);
+
+      jest.useRealTimers();
+    });
+
+    it('should re-render the component on each update when it reads the score', async () => {
+      jest.useFakeTimers();
+      const renderedScores: Array<number | null> = [];
+
+      const { result } = renderHook(() => {
+        const measurement = usePerformanceMeasurement({ ...defaultOptions, fidTimeout: 1000 });
+        renderedScores.push(measurement.score?.overall ?? null);
+        return measurement;
+      });
+
+      // Wait for TTFF
+      await act(async () => {
+        jest.runAllTicks();
+      });
+
+      act(() => {
+        result.current.markInteractive();
+      });
+
+      // Fast-forward past FID timeout so the final report is logged
+      act(() => {
+        jest.advanceTimersByTime(1100);
+      });
+
+      // The first render, then one re-render per update: TTFF, TTI and the final report
+      expect(renderedScores).toHaveLength(4);
+      expect(renderedScores[0]).toBeNull();
+      renderedScores.slice(1).forEach((overall) => {
+        expect(overall).toEqual(expect.any(Number));
+      });
+      expect(result.current.metrics?.timeToInteractiveMs).toBeGreaterThanOrEqual(0);
+
+      jest.useRealTimers();
+    });
+  });
+
   describe('Cleanup', () => {
     it('should handle cleanup on unmount', async () => {
       const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
