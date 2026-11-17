@@ -40,7 +40,7 @@ pnpm add react-native-lighthouse
 import { usePerformanceMeasurement } from 'react-native-lighthouse';
 
 function ProductScreen({ productId }) {
-  const { markInteractive, panResponder, score } = usePerformanceMeasurement({
+  const { markInteractive, panResponder } = usePerformanceMeasurement({
     componentName: 'ProductScreen',
     onReport: (metrics, score) => {
       // Send to your analytics
@@ -247,7 +247,7 @@ function HomeScreen() {
 
 ```tsx
 function CheckoutScreen() {
-  const { markInteractive, panResponder, score } = usePerformanceMeasurement({
+  const { markInteractive, panResponder } = usePerformanceMeasurement({
     componentName: 'CheckoutScreen',
     namespace: 'checkout',
     onReport: (metrics, score) => {

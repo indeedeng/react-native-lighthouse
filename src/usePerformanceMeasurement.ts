@@ -26,7 +26,7 @@ const isDev = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV ==
  * @example
  * ```tsx
  * function MyScreen() {
- *   const { markInteractive, panResponder, score } = usePerformanceMeasurement({
+ *   const { markInteractive, panResponder } = usePerformanceMeasurement({
  *     componentName: 'MyScreen',
  *     onReport: (metrics, score) => {
  *       // Send to your analytics service
